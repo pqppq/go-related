@@ -1,2 +1,1 @@
-# blog-strapi
-# go-related
+Golang related topics
