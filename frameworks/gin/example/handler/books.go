@@ -1,21 +1,23 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pqppq/go-related/frameworks/gin/example/repository"
+	"go.uber.org/zap"
 )
 
 type BookHandler struct {
-	repo *repository.BookRepo
+	repo   *repository.BookRepo
+	logger *zap.Logger
 }
 
-func NewBookHandler(repo *repository.BookRepo) *BookHandler {
+func NewBookHandler(repo *repository.BookRepo, logger *zap.Logger) *BookHandler {
 	return &BookHandler{
-		repo: repo,
+		repo:   repo,
+		logger: logger,
 	}
 }
 
@@ -50,6 +52,9 @@ func (h *BookHandler) ShowBook(c *gin.Context) {
 	}
 	book, err := h.repo.Get(id)
 	if err != nil {
+		h.logger.Info(
+			"failed to get book data",
+			zap.Int("id", id))
 		h.InternalServerError(c)
 		return
 	}
@@ -62,7 +67,8 @@ func (h *BookHandler) ShowBook(c *gin.Context) {
 func (h *BookHandler) ShowBookList(c *gin.Context) {
 	books, err := h.repo.GetAll()
 	if err != nil {
-		fmt.Println(err.Error())
+		h.logger.Info(
+			"failed to get all book data")
 		h.InternalServerError(c)
 		return
 	}
@@ -76,6 +82,8 @@ func (h *BookHandler) AddBook(c *gin.Context) {
 	var title string
 	err := c.Bind(&title)
 	if err != nil {
+		h.logger.Info(
+			"failed to parse title to insert")
 		h.InvalidRequest(c)
 		return
 	}
@@ -94,6 +102,8 @@ func (h *BookHandler) UpdateBook(c *gin.Context) {
 	title := c.Param("title")
 	id, err := strconv.Atoi(rowId)
 	if err != nil {
+		h.logger.Info(
+			"failed to parse id or title to update")
 		h.InvalidRequest(c)
 		return
 	}
@@ -115,6 +125,8 @@ func (h *BookHandler) DeleteBook(c *gin.Context) {
 	rowId := c.Param("id")
 	id, err := strconv.Atoi(rowId)
 	if err != nil {
+		h.logger.Info(
+			"failed to parse id  to delete")
 		h.InvalidRequest(c)
 		return
 	}

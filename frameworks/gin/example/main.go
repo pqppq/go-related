@@ -1,16 +1,26 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/pqppq/go-related/frameworks/gin/example/handler"
 	"github.com/pqppq/go-related/frameworks/gin/example/repository"
+	"go.uber.org/zap"
 )
 
-var port = ":8080"
+var (
+	port   = ":8080"
+	dbFile = "./example.db"
+)
 
 func main() {
-	repo := repository.NewBookRepo("./example.db")
-	bookHandler := handler.NewBookHandler(repo)
+	repo := repository.NewBookRepo(dbFile)
+	logger, err := zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+	bookHandler := handler.NewBookHandler(repo, logger)
 
 	route := gin.Default()
 	books := route.Group("/books")
