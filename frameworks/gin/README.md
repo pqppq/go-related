@@ -51,12 +51,23 @@ func main() {
             "message": "hello world",
         })
     })
+    // r.POST
+    // r.PUT
+    // r.DELETE
+    // r.PATCH
+    // r.HEAD
+    // r.OPTIONS
 
     r.Run(":8080")
 }
 ```
+ルーティングのグループ化
+https://gin-gonic.com/ja/docs/examples/grouping-routes/
 
-## Context
+redirect
+https://gin-gonic.com/ja/docs/examples/redirects/
+
+context
 https://pkg.go.dev/github.com/gin-gonic/gin#Context
 
 ```go
@@ -75,5 +86,80 @@ type Context struct {
     // Accepted defines a list of manually accepted formats for content negotiation.
     Accepted []string
     // contains filtered or unexported fields
+}
+```
+
+パスパラメータはc.Paramで取得する
+https://gin-gonic.com/ja/docs/examples/param-in-path/
+
+あるいは構造体を作ってそのタグを使ってバインドすることで取得する
+https://gin-gonic.com/ja/docs/examples/bind-uri/
+
+クエリパラメータはc.Query/c.DefaultQueryで取得する
+https://gin-gonic.com/ja/docs/examples/querystring-param/
+
+http.Handlerでwrapして別々のgoroutineで走らせると複数のポートでサービスを動かせるみたい
+https://gin-gonic.com/ja/docs/examples/run-multiple-service/
+
+middlewareはr.Use()で登録する
+https://gin-gonic.com/ja/docs/examples/using-middleware/
+
+custom middleware
+https://gin-gonic.com/ja/docs/examples/custom-middleware/
+```go
+func Logger() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		t := time.Now()
+
+		// サンプル変数を設定
+		c.Set("example", "12345")
+
+		// request 処理の前
+
+		c.Next()
+
+		// request 処理の後
+		latency := time.Since(t)
+		log.Print(latency)
+
+		// 送信予定のステータスコードにアクセスする
+		status := c.Writer.Status()
+		log.Println(status)
+	}
+}
+```
+
+form dataを取得する
+https://gin-gonic.com/ja/docs/examples/query-and-post-form/
+
+リクエストボディを構造体にバインドする
+https://gin-gonic.com/ja/docs/examples/binding-and-validation/
+
+cookie
+https://gin-gonic.com/ja/docs/examples/cookie/
+
+```go
+// Use attaches a global middleware to the router. i.e. the middleware attached through Use() will be
+// included in the handlers chain for every single request. Even 404, 405, static files...
+// For example, this is the right place for a logger or error management middleware.
+func (engine *Engine) Use(middleware ...HandlerFunc) IRoutes {
+	engine.RouterGroup.Use(middleware...)
+	engine.rebuild404Handlers()
+	engine.rebuild405Handlers()
+	return engine
+}
+
+...
+
+// HandlersChain defines a HandlerFunc slice.
+type HandlersChain []HandlerFunc
+
+func (group *RouterGroup) combineHandlers(handlers HandlersChain) HandlersChain {
+	finalSize := len(group.Handlers) + len(handlers)
+	assert1(finalSize < int(abortIndex), "too many handlers")
+	mergedHandlers := make(HandlersChain, finalSize)
+	copy(mergedHandlers, group.Handlers)
+	copy(mergedHandlers[len(group.Handlers):], handlers)
+	return mergedHandlers
 }
 ```

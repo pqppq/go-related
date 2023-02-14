@@ -14,7 +14,9 @@ var (
 	dbFile = "./example.db"
 )
 
-func main() {
+func setupRouter() *gin.Engine {
+	router := gin.Default()
+
 	repo := repository.NewBookRepo(dbFile)
 	logger, err := zap.NewDevelopment()
 	if err != nil {
@@ -22,8 +24,7 @@ func main() {
 	}
 	bookHandler := handler.NewBookHandler(repo, logger)
 
-	route := gin.Default()
-	books := route.Group("/books")
+	books := router.Group("/books")
 	{
 		books.GET("/", bookHandler.ShowBookList)
 		books.POST("/", bookHandler.AddBook)
@@ -32,5 +33,11 @@ func main() {
 		books.DELETE("/:id", bookHandler.DeleteBook)
 	}
 
-	route.Run(port)
+	return router
+}
+
+func main() {
+	router := setupRouter()
+
+	router.Run(port)
 }
